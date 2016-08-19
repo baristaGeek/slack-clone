@@ -7,7 +7,7 @@ import(
 )
 
 type Message struct {
-	Name string `json:"name"`
+	Name string `json:"name"` //package we're providing special tagging for and name
 	Data interface{} `json:"data"`
 }
 
@@ -57,21 +57,6 @@ func main(){
 	}
 }
 
-func addChannel(data interface{}) (Channel, error){
-	var channel Channel 
-	/* manual type assertion
-	channelMap := data.(map[]string interface{})
-	channel.Name = channelMap["name"].(string)
-	*/
-	err := mapstructure.Decode(data, &channel)
-	if err != nil{
-		fmt.Println(err)
-		return channel, err
-	}
 
-	channel.Id = "1" //naturally set by RethinkDB but hardcoded for the moment
-	fmt.Printf("%#v\n", channel)
-	return channel, nil 
-}
 
 
