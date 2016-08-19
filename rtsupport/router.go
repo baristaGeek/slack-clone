@@ -3,6 +3,7 @@ package main
 import(
   "github.com/gorilla/websocket"
   "fmt"
+  "net/http"
 )
 
 type Handler func(*Client, interface{})
@@ -23,8 +24,13 @@ func NewRouter() *Router{
   }
 }
 
-func(r *Router) Handle(msgName string, handler Handler){
+func(r *Router) Handle(msgName string, handler Handler){ //used to share the routing rules with the client
   r.rules[msgName] = handler
+}
+
+func (r *Router) FindHandler(msgName string) (Handler, bool){
+    handler, found := r.rules[msgName]
+    return handler, found
 }
 
 func (e *Router) ServeHTTP(w http.ResponseWriter, r *http.Request){
@@ -34,7 +40,7 @@ func (e *Router) ServeHTTP(w http.ResponseWriter, r *http.Request){
     fmt.Fprint(w, err.Error())
     return
   }
-  client := NewClient(socket)
+  client := NewClient(socket, e.FindHandler)
   go client.Write()
   client.Read() //Running on the ServeHTTP goroutine
 }
