@@ -2,6 +2,7 @@ package main
 
 import(
   "github.com/gorilla/websocket"
+  "fmt"
 )
 
 type Handler func(*Client, interface{})
@@ -18,7 +19,7 @@ type Router struct{
 
 func NewRouter() *Router{
   return &Router{
-    rules:  make(map[string]Handler), 
+    rules:  make(map[string]Handler),
   }
 }
 
@@ -28,4 +29,12 @@ func(r *Router) Handle(msgName string, handler Handler){
 
 func (e *Router) ServeHTTP(w http.ResponseWriter, r *http.Request){
   socket, err := upgrader.Upgrade(w, r, nil)
+  if err != nil{
+    w.WriteHeader(http.StatusInternalServerError)
+    fmt.Fprint(w, err.Error())
+    return
+  }
+  client := NewClient(socket)
+  go client.Write()
+  client.Read() //Running on the ServeHTTP goroutine
 }
