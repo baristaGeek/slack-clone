@@ -2,6 +2,7 @@ package main
 
 import(
   "github.com/gorilla/websocket"
+  r "gopkg.in/dancannon/gorethink.v2"
 )
 
 type FindHandler func(string) (Handler, bool)
@@ -15,6 +16,14 @@ type Client struct{
   send chan Message
   socket *websocket.Conn
   findHandler FindHandler
+  session *r.Session
+  stopChannels map[int]chan bool
+}
+
+func (c *Client) NewStopChannel(stopKey int) chan bool{
+  stop := make(chan bool)
+  c.stopChannels[stopKey] = stop
+  return stop
 }
 
 func (client *Client) Read(){
@@ -39,14 +48,21 @@ func (client *Client) Write(){ //capitalizing a func name makes the access modif
   client.socket.Close()
 }
 
-
+func (c *Client) Close(){
+  for _, ch := range c.stopChannels{ //range returns each key-value pair, but we'll just store the channel value
+    ch <- true
+  }
+  close(c.send)
+}
 
 //How to create objects in a non-OOP language, such as Golang
 //It allows us to easily instantiate a new client in func main
-func NewClient(socket *websocket.Conn, findHandler FindHandler) *Client{
+func NewClient(socket *websocket.Conn, findHandler FindHandler, session *r.Session) *Client{
   return &Client{ //pointer returning newly instantiated client
     send: make(chan Message),
     socket: socket, //set socket-field to the past websocket
     findHandler: findHandler,
+    session: session,
+    stopChannels: make(map[int]chan bool),
   }
 }

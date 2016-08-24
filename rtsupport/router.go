@@ -2,6 +2,7 @@ package main
 
 import(
   "github.com/gorilla/websocket"
+  r "gopkg.in/dancannon/gorethink.v2"
   "fmt"
   "net/http"
 )
@@ -16,11 +17,13 @@ var upgrader = websocket.Upgrader{
 
 type Router struct{
   rules map[string]Handler
+  session *r.Session
 }
 
-func NewRouter() *Router{
+func NewRouter(session *r.Session) *Router{
   return &Router{
     rules:  make(map[string]Handler),
+    session: session,
   }
 }
 
@@ -40,7 +43,9 @@ func (e *Router) ServeHTTP(w http.ResponseWriter, r *http.Request){
     fmt.Fprint(w, err.Error())
     return
   }
-  client := NewClient(socket, e.FindHandler)
+  client := NewClient(socket, e.FindHandler, e.session)
+  defer client.Close() //Queued up so it doesn't execute right away, but later before exiting the function
   go client.Write()
   client.Read() //Running on the ServeHTTP goroutine
+
 }
