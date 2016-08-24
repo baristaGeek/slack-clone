@@ -21,9 +21,17 @@ type Client struct{
 }
 
 func (c *Client) NewStopChannel(stopKey int) chan bool{
+  c.StopForKey(stopKey)
   stop := make(chan bool)
   c.stopChannels[stopKey] = stop
   return stop
+}
+
+func (c *Client) StopForKey(key int){
+  if ch, found := c.stopChannels[key]; found{
+    ch <- true //tell the channel to exit its goroutine
+    delete()
+  }
 }
 
 func (client *Client) Read(){
