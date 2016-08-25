@@ -30,7 +30,7 @@ func (c *Client) NewStopChannel(stopKey int) chan bool{
 func (c *Client) StopForKey(key int){
   if ch, found := c.stopChannels[key]; found{
     ch <- true //tell the channel to exit its goroutine
-    delete()
+    delete(c.stopChannels, key)
   }
 }
 
