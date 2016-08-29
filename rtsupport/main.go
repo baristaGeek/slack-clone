@@ -30,6 +30,12 @@ func main(){
 	router.Handle("channel add", addChannel)
 	router.Handle("channel subscribe", subscribeChannel)
 	router.Handle("channel unsubscribe", unsubscribeChannel)
+
+	//TODO: user edit, user subscribe, user unsubscribe, message add, message subscribe, message unsubscribe
+	router.Handle("user edit", editUser)
+	router.Handle("user subscribe", subscribeUser)
+	router.Handle("user unsubscribe", unsubscribeUser)
+
 	http.Handle("/", router)
 	http.ListenAndServe(":4000", nil)
 }

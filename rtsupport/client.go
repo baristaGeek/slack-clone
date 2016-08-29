@@ -18,6 +18,8 @@ type Client struct{
   findHandler FindHandler
   session *r.Session
   stopChannels map[int]chan bool
+  id string
+  userName string
 }
 
 func (c *Client) NewStopChannel(stopKey int) chan bool{
@@ -66,11 +68,24 @@ func (c *Client) Close(){
 //How to create objects in a non-OOP language, such as Golang
 //It allows us to easily instantiate a new client in func main
 func NewClient(socket *websocket.Conn, findHandler FindHandler, session *r.Session) *Client{
+  var user User
+  user.Name = "anonymous"
+  res, err := r.Table("user").Insert("user").RunWrite(session)
+  if err != nil{
+    log.Println(err.Error())
+  }
+  var id string
+  if len(res.GeneratedKeys) > 0{
+    id = res.GeneratedKeys = [0]
+  }
+
   return &Client{ //pointer returning newly instantiated client
     send: make(chan Message),
     socket: socket, //set socket-field to the past websocket
     findHandler: findHandler,
     session: session,
     stopChannels: make(map[int]chan bool),
+    id: id,
+    userName: user.Name,
   }
 }
